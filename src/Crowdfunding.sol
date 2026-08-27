@@ -88,4 +88,25 @@ contract Crowdfunding {
         (bool success, ) = payable(campaign.creator).call{value: amount}("");
         require(success, "Transfer failed");
     }
+
+    function refund(uint256 campaignId) external {
+    Campaign storage campaign = campaigns[campaignId];
+
+    require(campaign.creator != address(0), "Campaign does not exist");
+    require(block.timestamp >= campaign.deadline, "Campaign is still active");
+    require(campaign.amountRaised < campaign.goal, "Funding goal was reached");
+
+    uint256 amount = contributions[campaignId][msg.sender];
+
+    require(amount > 0, "No contribution to refund");
+
+    contributions[campaignId][msg.sender] = 0;
+    campaign.amountRaised -= amount;
+
+    (bool success, ) = payable(msg.sender).call{value: amount}("");
+    require(success, "Refund failed");
+}
+
+// testnet contract address
+// Contract Address: 0x240e17677f0a90aCFfc4742c9d7A55f11E7FACC0
 }
